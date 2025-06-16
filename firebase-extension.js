@@ -1,14 +1,14 @@
-// Importera Firebase bibliotek (måste funka i TurboWarp Packager)
+// Importera Firebase bibliotek
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getDatabase, ref, set, get } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+import { getDatabase, ref, set, get, onValue } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
-// Din Firebase-konfiguration – byt ut mot din egen!
+// Din Firebase-konfiguration
 const firebaseConfig = {
   apiKey: "AIzaSyCyEi3GcT1pidPveKo8MWpgpTWI81mnxJQ",
   authDomain: "visitor-counter-display.firebaseapp.com",
   databaseURL: "https://visitor-counter-display-default-rtdb.europe-west1.firebasedatabase.app",
   projectId: "visitor-counter-display",
-  storageBucket: "visitor-counter-display.firebasestorage.app",
+  storageBucket: "visitor-counter-display.appspot.com",
   messagingSenderId: "1039556828713",
   appId: "1:1039556828713:web:e65c11ff4f6754be040638"
 };
@@ -17,14 +17,16 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 
-// Skapa en TurboWarp Extension med Firebase-block
 class FirebaseExtension {
+  constructor() {
+    this.lastValue = ""; // för getLatestData
+  }
+
   getInfo() {
     return {
       id: 'firebaseext',
       name: 'Firebase',
       color1: '#FFA500',
-      color2: '#FF8C00',
       blocks: [
         {
           opcode: 'setData',
@@ -42,18 +44,31 @@ class FirebaseExtension {
           arguments: {
             key: { type: Scratch.ArgumentType.STRING, defaultValue: "besökare" }
           }
+        },
+        {
+          opcode: 'listenData',
+          blockType: Scratch.BlockType.COMMAND,
+          text: 'lyssna på [key]',
+          arguments: {
+            key: { type: Scratch.ArgumentType.STRING, defaultValue: "besökare" }
+          }
+        },
+        {
+          opcode: 'getLatestData',
+          blockType: Scratch.BlockType.REPORTER,
+          text: 'senaste värdet',
         }
       ]
     };
   }
 
-  // Sätt data i Firebase
+  // Sätt data
   setData(args) {
     const dbRef = ref(db, args.key);
     set(dbRef, args.value);
   }
 
-  // Hämta data från Firebase (asynkront)
+  // Hämta data en gång
   async getData(args) {
     const dbRef = ref(db, args.key);
     const snapshot = await get(dbRef);
@@ -63,7 +78,23 @@ class FirebaseExtension {
       return "ingen data";
     }
   }
+
+  // Lyssna på förändringar (push)
+  listenData(args) {
+    const dbRef = ref(db, args.key);
+    onValue(dbRef, (snapshot) => {
+      if (snapshot.exists()) {
+        this.lastValue = snapshot.val();
+      } else {
+        this.lastValue = "ingen data";
+      }
+    });
+  }
+
+  // Returnera senaste lyssnade värde
+  getLatestData() {
+    return this.lastValue;
+  }
 }
 
-// Registrera extension hos Scratch
 Scratch.extensions.register(new FirebaseExtension());
