@@ -1,14 +1,16 @@
-// Importera Firebase bibliotek
+// Importera Firebase bibliotek (CDN-länkar fungerar bara om filen körs i en miljö som tillåter import)
+// Om TurboWarp inte stödjer import direkt i extensionen, kan man behöva paketera Firebase-bibliotek på annat sätt.
+
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getDatabase, ref, set, get } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
-// Din Firebase-konfiguration
+// Din Firebase-konfiguration - ändra här till din egen config från Firebase console
 const firebaseConfig = {
   apiKey: "AIzaSyCyEi3GcT1pidPveKo8MWpgpTWI81mnxJQ",
   authDomain: "visitor-counter-display.firebaseapp.com",
   databaseURL: "https://visitor-counter-display-default-rtdb.europe-west1.firebasedatabase.app",
   projectId: "visitor-counter-display",
-  storageBucket: "visitor-counter-display.appspot.com",
+  storageBucket: "visitor-counter-display.firebasestorage.app",
   messagingSenderId: "1039556828713",
   appId: "1:1039556828713:web:e65c11ff4f6754be040638"
 };
@@ -53,7 +55,7 @@ class FirebaseExtension {
     set(dbRef, args.value);
   }
 
-  // Funktion för att hämta data från Firebase
+  // Funktion för att hämta data från Firebase (OBS async)
   async getData(args) {
     const dbRef = ref(db, args.key);
     const snapshot = await get(dbRef);
@@ -65,5 +67,5 @@ class FirebaseExtension {
   }
 }
 
-// Registrera extension
+// Registrera extensionen i Scratch/TurboWarp
 Scratch.extensions.register(new FirebaseExtension());
