@@ -27,6 +27,7 @@ class FirebaseExtension {
       id: 'firebaseext',
       name: 'Firebase',
       color1: '#FFA500',
+      color2: '#FF8C00',
       blocks: [
         {
           opcode: 'setData',
@@ -62,7 +63,7 @@ class FirebaseExtension {
     };
   }
 
-  // Sätt data
+  // Sätt data i Firebase
   setData(args) {
     const dbRef = ref(db, args.key);
     set(dbRef, args.value);
@@ -97,4 +98,5 @@ class FirebaseExtension {
   }
 }
 
+// Registrera extension hos Scratch
 Scratch.extensions.register(new FirebaseExtension());
