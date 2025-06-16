@@ -1,6 +1,6 @@
-// Importera Firebase bibliotek
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getDatabase, ref, set, get, onValue } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+// Ladda in Firebase via importScripts
+importScripts('https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js');
+importScripts('https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js');
 
 // Din Firebase-konfiguration
 const firebaseConfig = {
@@ -14,12 +14,12 @@ const firebaseConfig = {
 };
 
 // Initiera Firebase
-const app = initializeApp(firebaseConfig);
-const db = getDatabase(app);
+const app = firebase.initializeApp(firebaseConfig);
+const db = firebase.database(app);
 
 class FirebaseExtension {
   constructor() {
-    this.lastValue = ""; // för getLatestData
+    this.lastValue = ""; // senaste lyssnade värdet
   }
 
   getInfo() {
@@ -57,7 +57,7 @@ class FirebaseExtension {
         {
           opcode: 'getLatestData',
           blockType: Scratch.BlockType.REPORTER,
-          text: 'senaste värdet',
+          text: 'senaste värdet'
         }
       ]
     };
@@ -65,25 +65,26 @@ class FirebaseExtension {
 
   // Sätt data i Firebase
   setData(args) {
-    const dbRef = ref(db, args.key);
-    set(dbRef, args.value);
+    const dbRef = db.ref(args.key);
+    dbRef.set(args.value);
   }
 
   // Hämta data en gång
-  async getData(args) {
-    const dbRef = ref(db, args.key);
-    const snapshot = await get(dbRef);
-    if (snapshot.exists()) {
-      return snapshot.val();
-    } else {
-      return "ingen data";
-    }
+  getData(args) {
+    const dbRef = db.ref(args.key);
+    return dbRef.once('value').then(snapshot => {
+      if (snapshot.exists()) {
+        return snapshot.val();
+      } else {
+        return "ingen data";
+      }
+    });
   }
 
-  // Lyssna på förändringar (push)
+  // Lyssna på förändringar
   listenData(args) {
-    const dbRef = ref(db, args.key);
-    onValue(dbRef, (snapshot) => {
+    const dbRef = db.ref(args.key);
+    dbRef.on('value', (snapshot) => {
       if (snapshot.exists()) {
         this.lastValue = snapshot.val();
       } else {
@@ -92,11 +93,10 @@ class FirebaseExtension {
     });
   }
 
-  // Returnera senaste lyssnade värde
+  // Returnera senaste värdet
   getLatestData() {
     return this.lastValue;
   }
 }
 
-// Registrera extension hos Scratch
 Scratch.extensions.register(new FirebaseExtension());
